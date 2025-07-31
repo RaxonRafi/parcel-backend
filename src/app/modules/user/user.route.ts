@@ -1,4 +1,4 @@
-import {Router} from "express"
+import { Router } from "express"
 import { UserController } from "./user.controller"
 import { createUserZodSchema } from "./user.validation"
 import { validateRequest } from "../../middlewares/validateRequest"
@@ -10,3 +10,5 @@ router.post(
     validateRequest(createUserZodSchema),
     UserController.createUser
 )
+
+export const UserRoutes = router
