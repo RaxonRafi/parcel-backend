@@ -10,6 +10,7 @@ import expressSession from "express-session"
 import { envVars } from "./app/config/env"
 const app = express()
 
+app.use(express.json())
 app.use(expressSession({
     secret: envVars.JWT_ACCESS_SECRET,
     resave: false,
@@ -19,7 +20,7 @@ app.use(expressSession({
 app.use(passport.initialize())
 app.use(passport.session())
 app.use(cookieParser())
-app.use(express.json())
+
 app.use(express.urlencoded({extended:true}))
 app.use(cors())
 app.use("/api/v1",router)

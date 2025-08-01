@@ -11,7 +11,6 @@ export enum Status {
 }
 
 export interface IStatuslog {
-    trackingId: string,
     status: Status,
     location?: string,
     note?: string,
@@ -58,4 +57,5 @@ export interface IParcel{
     estimatedDelivery?: Date,
     actualDelivery?: Date,
     priority?: Priority,
+    statusLogs:IStatuslog[]
 }
