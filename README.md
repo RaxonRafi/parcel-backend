@@ -101,6 +101,14 @@ The API is structured into modular routes, controllers, middlewares, and validat
 
 ---
 
+## 📄 API Documentation
+
+You can explore the full API with request/response examples via Postman:
+
+👉 [View Postman Docs](https://documenter.getpostman.com/view/21233308/2sB3BALrvB)
+---
+
+
 ## 🧩 Tech Stack
 
 - **Backend Framework**: Express.js (with TypeScript)
