@@ -5,7 +5,7 @@ import { envVars } from "../config/env";
 import { JwtPayload } from "jsonwebtoken";
 import { User } from "../modules/user/user.model";
 import AppError from "../errorHelpers/AppError";
-import { email } from "zod";
+
 
 export const createUserTokens = (user: Partial<IUser>)=>{
     const jwtPayload = {

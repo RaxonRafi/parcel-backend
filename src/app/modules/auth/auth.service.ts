@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { JwtPayload } from "jsonwebtoken"
 import { createNewAccessTokenWithRefreshToken } from "../../utils/userTokens"
 import { User } from "../user/user.model"

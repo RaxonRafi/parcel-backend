@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable no-console */
 import passport from "passport";
 import { Strategy as LocalStrategy} from "passport-local";
 import bcryptjs from "bcryptjs"

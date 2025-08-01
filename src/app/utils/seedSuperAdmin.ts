@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { envVars } from "../config/env";
 import { IAuthProvider, IUser, Role } from "../modules/user/user.interface";
 import { User } from "../modules/user/user.model";
@@ -28,6 +29,7 @@ export const seedSuperAdmin = async () =>{
             auths: [authProvider]
 
         }
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const superadmin = await User.create(payload)
         console.log("Super Admin Created Successfuly! \n");
     } catch (error) {

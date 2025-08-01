@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { TErrorSources } from "../interfaces/error.types"
 import { TGenericErrorResponse } from "../interfaces/error.types"
 
