@@ -100,6 +100,13 @@ The API is structured into modular routes, controllers, middlewares, and validat
 | GET    | `/api/parcels/:trackingId`          | Public        | Get single parcel by tracking ID              |
 
 ---
+### 📦 Dashboard Routes
+
+| Method | Endpoint                            | Access        | Description                                   |
+|--------|-------------------------------------|---------------|-----------------------------------------------|
+| GET   | `/api/dashboard/`                     | Admin | Get Dashboard Stats                           |
+
+---
 
 ## 📄 API Documentation
 
