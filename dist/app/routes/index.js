@@ -5,6 +5,7 @@ const express_1 = require("express");
 const user_route_1 = require("../modules/user/user.route");
 const auth_route_1 = require("../modules/auth/auth.route");
 const percel_route_1 = require("../modules/parcel/percel.route");
+const dashboard_route_1 = require("../modules/dashboard/dashboard.route");
 exports.router = (0, express_1.Router)();
 const moduleRoutes = [
     {
@@ -18,6 +19,10 @@ const moduleRoutes = [
     {
         path: "/parcel",
         route: percel_route_1.ParcelRoutes
+    },
+    {
+        path: "/dashboard",
+        route: dashboard_route_1.DashboardRoutes
     },
 ];
 moduleRoutes.forEach((route) => {
