@@ -32,6 +32,11 @@ router.get(
     checkAuth(Role.ADMIN), 
     UserController.getSingleUser
 )
+router.delete(
+    "/:id", 
+    checkAuth(Role.ADMIN), 
+    UserController.deleteUser
+)
 router.patch(
     "/:userId/block", 
     checkAuth(Role.ADMIN), 

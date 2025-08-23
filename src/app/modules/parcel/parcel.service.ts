@@ -291,6 +291,7 @@ export const getAllParcels=async(query:Record<string,string>)=>{
   .fields()
   .paginate()
 
+
   const [data, meta] = await Promise.all([
     parcelData.build(),
     queryBuilder.getMeta()

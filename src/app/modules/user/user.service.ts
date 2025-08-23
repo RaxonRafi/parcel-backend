@@ -7,20 +7,38 @@ import { envVars } from "../../config/env";
 import { userSearchableFields } from "./user.constants";
 import { QueryBuilder } from "../../utils/QueryBuilder";
 import { JwtPayload } from "jsonwebtoken";
+import { verifyToken } from "../../utils/jwt";
 
 
-const createUser = async (payload: Partial<IUser>)=>{
+const createUser = async (payload: Partial<IUser>, token?: string)=>{
     const {email, password,role, ...rest} = payload;
     const isUserExists = await User.findOne({email})
 
+    const verifiedToken = verifyToken(token as string,envVars.JWT_ACCESS_SECRET) as JwtPayload
+    const currentUser = await User.findOne({ email: verifiedToken.email })
+    
+   
     if(isUserExists){
         throw new AppError(httpStatus.BAD_REQUEST,"User already exists!!")
     }
-    if(role === Role.ADMIN){
-        throw new AppError(httpStatus.BAD_REQUEST,"Unathorized!")
-    }
+    // if(role === Role.ADMIN){
+    //     throw new AppError(httpStatus.BAD_REQUEST,"Unathorized!")
+    // }
 
-    const userRole = role === Role.SENDER || role === Role.RECEIVER ? role : Role.SENDER
+    let userRole: Role;
+
+  if (role === Role.ADMIN) {
+    // Only an existing admin can create another admin
+    if (!currentUser || currentUser.role !== Role.ADMIN) {
+      throw new AppError(httpStatus.UNAUTHORIZED, "Unauthorized to create admin!");
+    }
+    userRole = Role.ADMIN;
+  } else if (role === Role.SENDER || role === Role.RECEIVER) {
+    userRole = role;
+  } else {
+    // Default role if none provided or invalid
+    userRole = Role.SENDER;
+  }
     
     const hashedPassword = await bcryptjs.hash(password as string,Number(envVars.BCRYPT_SALT_ROUND))
 
@@ -97,6 +115,12 @@ const getSingleUser = async (id: string) => {
         data: user
     }
 };
+const deleteUser = async (id: string) => {
+    const user = await User.deleteOne({_id:id});
+    return {
+        data: user
+    }
+};
 
 const getMe = async (userId: string) => {
     const user = await User.findById(userId).select("-password");
@@ -156,6 +180,7 @@ export const UserServices = {
     updateUser,
     getAllUsers,
     getSingleUser,
+    deleteUser,
     getMe,
     blockUser,
     unblockUser
