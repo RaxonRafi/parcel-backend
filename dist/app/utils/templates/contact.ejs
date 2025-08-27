@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>New Contact Message</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f9f9f9;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      background-color: #ffffff;
+      padding: 20px;
+      border-radius: 8px;
+      max-width: 600px;
+      margin: auto;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    h2 {
+      color: #333333;
+    }
+    p {
+      color: #555555;
+      line-height: 1.5;
+    }
+    .info {
+      margin-top: 20px;
+    }
+    .info strong {
+      display: inline-block;
+      width: 100px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>New Contact Message</h2>
+    <p>You have received a new message from your contact form:</p>
+
+    <div class="info">
+      <p><strong>First Name:</strong> <%= firstname %></p>
+      <p><strong>Last Name:</strong> <%= lastname %></p>
+      <p><strong>Email:</strong> <%= email %></p>
+      <p><strong>Subject:</strong> <%= subject %></p>
+      <p><strong>Message:</strong></p>
+      <p><%= message %></p>
+    </div>
+  </div>
+</body>
+</html>

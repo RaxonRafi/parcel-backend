@@ -32,16 +32,35 @@ const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const env_1 = require("../../config/env");
 const user_constants_1 = require("./user.constants");
 const QueryBuilder_1 = require("../../utils/QueryBuilder");
-const createUser = (payload) => __awaiter(void 0, void 0, void 0, function* () {
+const jwt_1 = require("../../utils/jwt");
+// import { deleteImageFromCloudinary } from "../../config/cloudinary.config";
+const createUser = (payload, token) => __awaiter(void 0, void 0, void 0, function* () {
     const { email, password, role } = payload, rest = __rest(payload, ["email", "password", "role"]);
     const isUserExists = yield user_model_1.User.findOne({ email });
+    let currentUser = null;
+    if (role === user_interface_1.Role.ADMIN) {
+        if (!token) {
+            throw new AppError_1.default(http_status_codes_1.default.UNAUTHORIZED, "Authorization token required to create admin!");
+        }
+        const verifiedToken = (0, jwt_1.verifyToken)(token, env_1.envVars.JWT_ACCESS_SECRET);
+        currentUser = yield user_model_1.User.findOne({ email: verifiedToken.email });
+        if (!currentUser || currentUser.role !== user_interface_1.Role.ADMIN) {
+            throw new AppError_1.default(http_status_codes_1.default.UNAUTHORIZED, "Unauthorized to create admin!");
+        }
+    }
     if (isUserExists) {
         throw new AppError_1.default(http_status_codes_1.default.BAD_REQUEST, "User already exists!!");
     }
+    let userRole;
     if (role === user_interface_1.Role.ADMIN) {
-        throw new AppError_1.default(http_status_codes_1.default.BAD_REQUEST, "Unathorized!");
+        userRole = user_interface_1.Role.ADMIN;
     }
-    const userRole = role === user_interface_1.Role.SENDER || role === user_interface_1.Role.RECEIVER ? role : user_interface_1.Role.SENDER;
+    else if (role === user_interface_1.Role.SENDER || role === user_interface_1.Role.RECEIVER) {
+        userRole = role;
+    }
+    else {
+        userRole = user_interface_1.Role.SENDER;
+    }
     const hashedPassword = yield bcryptjs_1.default.hash(password, Number(env_1.envVars.BCRYPT_SALT_ROUND));
     const authProvider = { provider: "credentials", providerId: email };
     const user = yield user_model_1.User.create(Object.assign({ email, password: hashedPassword, role: userRole, isVerified: true, auths: [authProvider] }, rest));
@@ -65,6 +84,9 @@ const updateUser = (payload, decodedToken) => __awaiter(void 0, void 0, void 0, 
     if (payload.role) {
         throw new AppError_1.default(http_status_codes_1.default.BAD_REQUEST, "You are not allowed to change your role");
     }
+    // if(payload.picture && ifUserExist.picture){
+    //     await deleteImageFromCloudinary(ifUserExist.picture)
+    // }
     const updatedUser = yield user_model_1.User.findByIdAndUpdate(userId, payload, { new: true, runValidators: true });
     return updatedUser;
 });
@@ -87,6 +109,12 @@ const getAllUsers = (query) => __awaiter(void 0, void 0, void 0, function* () {
 });
 const getSingleUser = (id) => __awaiter(void 0, void 0, void 0, function* () {
     const user = yield user_model_1.User.findById(id).select("-password");
+    return {
+        data: user
+    };
+});
+const deleteUser = (id) => __awaiter(void 0, void 0, void 0, function* () {
+    const user = yield user_model_1.User.deleteOne({ _id: id });
     return {
         data: user
     };
@@ -128,12 +156,23 @@ const unblockUser = (userId) => __awaiter(void 0, void 0, void 0, function* () {
     const unblockUser = yield user_model_1.User.findByIdAndUpdate(userId, { $set: { isActive: user_interface_1.IsActive.ACTIVE } }, { new: true }).select("-password");
     return unblockUser;
 });
+const senderList = () => __awaiter(void 0, void 0, void 0, function* () {
+    const senders = yield user_model_1.User.find({ role: "SENDER" }).select("name email _id"); // optional debug log
+    return senders;
+});
+const receiverList = () => __awaiter(void 0, void 0, void 0, function* () {
+    const receivers = yield user_model_1.User.find({ role: "RECEIVER" }).select("name email _id");
+    return receivers;
+});
 exports.UserServices = {
     createUser,
     updateUser,
     getAllUsers,
     getSingleUser,
+    deleteUser,
     getMe,
     blockUser,
-    unblockUser
+    unblockUser,
+    senderList,
+    receiverList
 };

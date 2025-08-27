@@ -12,11 +12,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ParcelController = exports.blockParcel = exports.getSingleParcel = exports.getAllParcels = exports.getReceiverDeliveryHistory = exports.confirmDeliveryByReceiver = exports.getParcelsForReceiver = exports.viewParcelAndStatusLogList = exports.cancelParcel = exports.updateParcelStatus = exports.createParcel = void 0;
+exports.ParcelController = exports.unblockParcel = exports.blockParcel = exports.getSingleParcel = exports.getAllParcels = exports.getReceiverDeliveryHistory = exports.confirmDeliveryByReceiver = exports.getParcelsForReceiver = exports.viewParcelAndStatusLogList = exports.cancelParcel = exports.updateParcelStatus = exports.createParcel = void 0;
 const catchAsync_1 = require("../../utils/catchAsync");
 const parcel_service_1 = require("./parcel.service");
 const sendResponse_1 = require("../../utils/sendResponse");
 const http_status_codes_1 = __importDefault(require("http-status-codes"));
+const AppError_1 = __importDefault(require("../../errorHelpers/AppError"));
 exports.createParcel = (0, catchAsync_1.catchAsync)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const parcel = yield parcel_service_1.ParcelServices.createParcel(req.body);
     (0, sendResponse_1.sendResponse)(res, {
@@ -29,10 +30,12 @@ exports.createParcel = (0, catchAsync_1.catchAsync)((req, res, next) => __awaite
 exports.updateParcelStatus = (0, catchAsync_1.catchAsync)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const { trackingId } = req.params;
     const userId = req.user;
-    const { status, updatedBy, location, note } = req.body;
+    const { status, location, note } = req.body || {};
+    if (!status) {
+        throw new AppError_1.default(http_status_codes_1.default.BAD_REQUEST, "Status is required");
+    }
     const parcel = yield parcel_service_1.ParcelServices.updateParcelStatus(trackingId, userId, {
         status,
-        updatedBy,
         location,
         note
     });
@@ -124,14 +127,36 @@ exports.getSingleParcel = (0, catchAsync_1.catchAsync)((req, res, next) => __awa
     });
 }));
 exports.blockParcel = (0, catchAsync_1.catchAsync)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b;
     const { trackingId } = req.params;
     const user = req.user;
-    const { note, location } = req.body;
-    const result = yield parcel_service_1.ParcelServices.blockParcel(trackingId, user, { note, location });
+    //   const { note, location } = req.body;
+    const details = {
+        note: ((_a = req.body) === null || _a === void 0 ? void 0 : _a.note) || undefined,
+        location: ((_b = req.body) === null || _b === void 0 ? void 0 : _b.location) || undefined,
+    };
+    const result = yield parcel_service_1.ParcelServices.blockParcel(trackingId, user, details);
     (0, sendResponse_1.sendResponse)(res, {
         success: true,
         statusCode: http_status_codes_1.default.OK,
         message: "Parcel blocked successfully",
+        data: result,
+    });
+}));
+exports.unblockParcel = (0, catchAsync_1.catchAsync)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b;
+    const { trackingId } = req.params;
+    const user = req.user;
+    //   const { note, location } = req.body;
+    const details = {
+        note: ((_a = req.body) === null || _a === void 0 ? void 0 : _a.note) || undefined,
+        location: ((_b = req.body) === null || _b === void 0 ? void 0 : _b.location) || undefined,
+    };
+    const result = yield parcel_service_1.ParcelServices.unblockParcel(trackingId, user, details);
+    (0, sendResponse_1.sendResponse)(res, {
+        success: true,
+        statusCode: http_status_codes_1.default.OK,
+        message: "Parcel unblock successfully",
         data: result,
     });
 }));
@@ -145,5 +170,6 @@ exports.ParcelController = {
     getReceiverDeliveryHistory: exports.getReceiverDeliveryHistory,
     getAllParcels: exports.getAllParcels,
     getSingleParcel: exports.getSingleParcel,
-    blockParcel: exports.blockParcel
+    blockParcel: exports.blockParcel,
+    unblockParcel: exports.unblockParcel
 };

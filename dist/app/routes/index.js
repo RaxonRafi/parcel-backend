@@ -6,6 +6,7 @@ const user_route_1 = require("../modules/user/user.route");
 const auth_route_1 = require("../modules/auth/auth.route");
 const percel_route_1 = require("../modules/parcel/percel.route");
 const dashboard_route_1 = require("../modules/dashboard/dashboard.route");
+const contact_route_1 = require("../modules/contact/contact.route");
 exports.router = (0, express_1.Router)();
 const moduleRoutes = [
     {
@@ -23,6 +24,10 @@ const moduleRoutes = [
     {
         path: "/dashboard",
         route: dashboard_route_1.DashboardRoutes
+    },
+    {
+        path: "/contact",
+        route: contact_route_1.ContactRoutes
     },
 ];
 moduleRoutes.forEach((route) => {

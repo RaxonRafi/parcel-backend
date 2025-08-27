@@ -9,6 +9,7 @@ import { ParcelSearchableFields } from "./parcel.constants";
 import { Role } from "../user/user.interface";
 import { sendEmail } from "../../utils/sendEmail";
 import { User } from "../user/user.model";
+import { envVars } from "../../config/env";
 
 export const createParcel = async (Payload: Partial<IParcel>) => {
   const session = await mongoose.startSession();
@@ -47,7 +48,7 @@ export const createParcel = async (Payload: Partial<IParcel>) => {
       to: SenderData?.email || "user@example.com",
       subject: `Parcel Created: ${trackingId}`,
       templateName: "parcelCreated", 
-      templateData: { trackingId, fromAddress, toAddress, senderName: SenderData?.name},
+      templateData: { trackingId, fromAddress, toAddress, senderName: SenderData?.name,baseUrl: envVars.FRONTEND_URL},
     });
     return parcel[0];
   } catch (error) {

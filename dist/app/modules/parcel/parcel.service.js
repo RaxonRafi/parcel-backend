@@ -66,12 +66,16 @@ const http_status_codes_1 = __importDefault(require("http-status-codes"));
 const QueryBuilder_1 = require("../../utils/QueryBuilder");
 const parcel_constants_1 = require("./parcel.constants");
 const user_interface_1 = require("../user/user.interface");
+const sendEmail_1 = require("../../utils/sendEmail");
+const user_model_1 = require("../user/user.model");
+const env_1 = require("../../config/env");
 const createParcel = (Payload) => __awaiter(void 0, void 0, void 0, function* () {
     const session = yield mongoose_1.default.startSession();
     session.startTransaction();
     try {
         const trackingId = (0, trackingIdGen_1.generateTrackingId)();
         const { sender, receiver, fromAddress, toAddress } = Payload, rest = __rest(Payload, ["sender", "receiver", "fromAddress", "toAddress"]);
+        const SenderData = yield user_model_1.User.findById(sender).select("name email");
         const statusLog = {
             status: parcel_interface_1.Status.REQUESTED,
             updatedBy: new mongoose_1.Types.ObjectId(sender),
@@ -87,6 +91,13 @@ const createParcel = (Payload) => __awaiter(void 0, void 0, void 0, function* ()
         ], { session });
         yield session.commitTransaction();
         session.endSession();
+        // Send email to sender
+        yield (0, sendEmail_1.sendEmail)({
+            to: (SenderData === null || SenderData === void 0 ? void 0 : SenderData.email) || "user@example.com",
+            subject: `Parcel Created: ${trackingId}`,
+            templateName: "parcelCreated",
+            templateData: { trackingId, fromAddress, toAddress, senderName: SenderData === null || SenderData === void 0 ? void 0 : SenderData.name, baseUrl: env_1.envVars.FRONTEND_URL },
+        });
         return parcel[0];
     }
     catch (error) {
@@ -160,6 +171,7 @@ const cancelParcel = (trackingId, user, newStatusLog) => __awaiter(void 0, void 
     try {
         const parcel = yield percel_model_1.Parcel.findOne({ trackingId }).session(session);
         const updatedBy = user.userId;
+        const receiverData = yield user_model_1.User.findById(parcel === null || parcel === void 0 ? void 0 : parcel.receiver).select("name email");
         if (!parcel) {
             throw new AppError_1.default(http_status_codes_1.default.BAD_REQUEST, "Parcel Not Available!!!");
         }
@@ -188,6 +200,12 @@ const cancelParcel = (trackingId, user, newStatusLog) => __awaiter(void 0, void 
         yield parcel.save({ session });
         yield session.commitTransaction();
         session.endSession();
+        yield (0, sendEmail_1.sendEmail)({
+            to: (receiverData === null || receiverData === void 0 ? void 0 : receiverData.email) || "receiver@example.com",
+            subject: `Parcel Canceled: ${trackingId}`,
+            templateName: "parcelCanceled",
+            templateData: { trackingId, note: newStatusLog.note },
+        });
         return parcel;
     }
     catch (error) {
@@ -202,7 +220,7 @@ const viewParcelAndStatusLogList = (user) => __awaiter(void 0, void 0, void 0, f
     if (!userId) {
         throw new AppError_1.default(http_status_codes_1.default.BAD_REQUEST, "User ID is missing");
     }
-    const parcels = yield percel_model_1.Parcel.find({ sender: new mongoose_1.Types.ObjectId(userId) });
+    const parcels = yield percel_model_1.Parcel.find({ sender: new mongoose_1.Types.ObjectId(userId) }).populate("statusLogs.updatedBy");
     return parcels.map(parcel => parcel.toObject());
 });
 exports.viewParcelAndStatusLogList = viewParcelAndStatusLogList;
@@ -221,6 +239,7 @@ const confirmDeliveryByReceiver = (trackingId, user, note) => __awaiter(void 0, 
     try {
         const userId = user.userId;
         const parcel = yield percel_model_1.Parcel.findOne({ trackingId }).session(session);
+        const senderData = yield user_model_1.User.findById(parcel === null || parcel === void 0 ? void 0 : parcel.sender).select("name email");
         if (!parcel) {
             throw new AppError_1.default(http_status_codes_1.default.NOT_FOUND, "Parcel not found");
         }
@@ -245,6 +264,13 @@ const confirmDeliveryByReceiver = (trackingId, user, note) => __awaiter(void 0, 
         yield parcel.save({ session });
         yield session.commitTransaction();
         session.endSession();
+        // Send email
+        yield (0, sendEmail_1.sendEmail)({
+            to: (senderData === null || senderData === void 0 ? void 0 : senderData.email) || "sender@example.com",
+            subject: `Parcel Delivered: ${trackingId}`,
+            templateName: "parcelDelivered",
+            templateData: { trackingId, note, deliveredBy: user.name },
+        });
         return parcel;
     }
     catch (error) {
@@ -265,7 +291,9 @@ const getReceiverDeliveryHistory = (user) => __awaiter(void 0, void 0, void 0, f
 });
 exports.getReceiverDeliveryHistory = getReceiverDeliveryHistory;
 const getAllParcels = (query) => __awaiter(void 0, void 0, void 0, function* () {
-    const queryBuilder = new QueryBuilder_1.QueryBuilder(percel_model_1.Parcel.find(), query);
+    const queryBuilder = new QueryBuilder_1.QueryBuilder(percel_model_1.Parcel.find()
+        .populate("sender")
+        .populate("receiver"), query);
     const parcelData = queryBuilder
         .filter()
         .search(parcel_constants_1.ParcelSearchableFields)
@@ -294,6 +322,7 @@ const blockParcel = (trackingId, user, details) => __awaiter(void 0, void 0, voi
     try {
         const parcel = yield percel_model_1.Parcel.findOne({ trackingId }).session(session);
         const updatedBy = user.userId;
+        const receiverData = yield user_model_1.User.findById(parcel === null || parcel === void 0 ? void 0 : parcel.receiver).select("name email");
         if (!parcel) {
             throw new AppError_1.default(http_status_codes_1.default.NOT_FOUND, "Parcel not found");
         }
@@ -316,6 +345,13 @@ const blockParcel = (trackingId, user, details) => __awaiter(void 0, void 0, voi
         yield parcel.save({ session });
         yield session.commitTransaction();
         session.endSession();
+        // Send email to receiver/sender
+        yield (0, sendEmail_1.sendEmail)({
+            to: (receiverData === null || receiverData === void 0 ? void 0 : receiverData.email) || "receiver@example.com",
+            subject: `Parcel Blocked: ${trackingId}`,
+            templateName: "parcelBlocked",
+            templateData: { trackingId, note: details.note, location: details.location },
+        });
         return parcel;
     }
     catch (error) {
@@ -323,6 +359,21 @@ const blockParcel = (trackingId, user, details) => __awaiter(void 0, void 0, voi
         session.endSession();
         throw error;
     }
+});
+const unblockParcel = (trackingId, user, details) => __awaiter(void 0, void 0, void 0, function* () {
+    const parcel = yield percel_model_1.Parcel.findOne({ trackingId });
+    if (!parcel)
+        throw new AppError_1.default(http_status_codes_1.default.NOT_FOUND, "Parcel not found");
+    parcel.isBlocked = false;
+    parcel.currentStatus = parcel_interface_1.Status.APPROVED;
+    const updatedBy = user.userId;
+    parcel.statusLogs.push({
+        status: parcel_interface_1.Status.APPROVED,
+        updatedBy: new mongoose_1.Types.ObjectId(updatedBy),
+        location: details.location,
+        note: details.note || "Parcel was unblocked",
+    });
+    return parcel.save();
 });
 exports.ParcelServices = {
     createParcel: exports.createParcel,
@@ -334,5 +385,6 @@ exports.ParcelServices = {
     getReceiverDeliveryHistory: exports.getReceiverDeliveryHistory,
     getAllParcels: exports.getAllParcels,
     getSingleParcel,
-    blockParcel
+    blockParcel,
+    unblockParcel
 };

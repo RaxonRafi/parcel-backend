@@ -8,6 +8,7 @@ import { userSearchableFields } from "./user.constants";
 import { QueryBuilder } from "../../utils/QueryBuilder";
 import { JwtPayload } from "jsonwebtoken";
 import { verifyToken } from "../../utils/jwt";
+// import { deleteImageFromCloudinary } from "../../config/cloudinary.config";
 
 
 const createUser = async (payload: Partial<IUser>, token?: string) => {
@@ -83,6 +84,9 @@ const updateUser = async (payload: Partial<IUser>, decodedToken: JwtPayload) => 
     if (payload.role) {
         throw new AppError(httpStatus.BAD_REQUEST, "You are not allowed to change your role");
     }
+    // if(payload.picture && ifUserExist.picture){
+    //     await deleteImageFromCloudinary(ifUserExist.picture)
+    // }
 
     const updatedUser = await User.findByIdAndUpdate(
         userId,
