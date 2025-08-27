@@ -7,6 +7,8 @@ import httpStatus from "http-status-codes"
 import { QueryBuilder } from "../../utils/QueryBuilder";
 import { ParcelSearchableFields } from "./parcel.constants";
 import { Role } from "../user/user.interface";
+import { sendEmail } from "../../utils/sendEmail";
+import { User } from "../user/user.model";
 
 export const createParcel = async (Payload: Partial<IParcel>) => {
   const session = await mongoose.startSession();
@@ -14,7 +16,7 @@ export const createParcel = async (Payload: Partial<IParcel>) => {
   try {
     const trackingId = generateTrackingId();
     const { sender, receiver, fromAddress, toAddress, ...rest } = Payload;
-
+    const SenderData = await User.findById(sender).select("name email");
     const statusLog: IStatuslog = {
       status: Status.REQUESTED,
       updatedBy: new Types.ObjectId(sender),
@@ -40,6 +42,13 @@ export const createParcel = async (Payload: Partial<IParcel>) => {
 
     await session.commitTransaction();
     session.endSession();
+        // Send email to sender
+    await sendEmail({
+      to: SenderData?.email || "user@example.com",
+      subject: `Parcel Created: ${trackingId}`,
+      templateName: "parcelCreated", 
+      templateData: { trackingId, fromAddress, toAddress, senderName: SenderData?.name},
+    });
     return parcel[0];
   } catch (error) {
     await session.abortTransaction();
@@ -134,11 +143,11 @@ export const cancelParcel = async (
 ) => {
   const session = await mongoose.startSession();
   session.startTransaction();
-
+ 
   try {
     const parcel = await Parcel.findOne({ trackingId }).session(session);
     const updatedBy = user.userId;
-
+    const receiverData = await User.findById(parcel?.receiver).select("name email");
     if (!parcel) {
       throw new AppError(httpStatus.BAD_REQUEST, "Parcel Not Available!!!");
     }
@@ -179,7 +188,12 @@ export const cancelParcel = async (
 
     await session.commitTransaction();
     session.endSession();
-
+    await sendEmail({
+    to: receiverData?.email || "receiver@example.com",
+    subject: `Parcel Canceled: ${trackingId}`,
+    templateName: "parcelCanceled",
+    templateData: { trackingId, note: newStatusLog.note },
+  });
     return parcel;
   } catch (error) {
     await session.abortTransaction();
@@ -196,7 +210,7 @@ export const viewParcelAndStatusLogList = async (user: Record<string, string>) =
     throw new AppError(httpStatus.BAD_REQUEST, "User ID is missing");
   }
 
-  const parcels = await Parcel.find({ sender: new Types.ObjectId(userId) });
+  const parcels = await Parcel.find({ sender: new Types.ObjectId(userId) }).populate("statusLogs.updatedBy");
 
   return parcels.map(parcel => parcel.toObject());
 };
@@ -225,7 +239,7 @@ export const confirmDeliveryByReceiver = async (
     const userId = user.userId;
 
     const parcel = await Parcel.findOne({ trackingId }).session(session);
-
+    const senderData = await User.findById(parcel?.sender).select("name email");
     if (!parcel) {
       throw new AppError(httpStatus.NOT_FOUND, "Parcel not found");
     }
@@ -257,7 +271,13 @@ export const confirmDeliveryByReceiver = async (
 
     await session.commitTransaction();
     session.endSession();
-
+    // Send email
+    await sendEmail({
+      to: senderData?.email || "sender@example.com",
+      subject: `Parcel Delivered: ${trackingId}`,
+      templateName: "parcelDelivered",
+      templateData: { trackingId, note, deliveredBy: user.name },
+    });
     return parcel;
   } catch (error) {
     await session.abortTransaction();
@@ -283,7 +303,11 @@ export const getReceiverDeliveryHistory = async (user: Record<string, string>) =
 };
 
 export const getAllParcels=async(query:Record<string,string>)=>{
-  const queryBuilder = new QueryBuilder(Parcel.find(),query)
+  const queryBuilder = new QueryBuilder(
+    Parcel.find()
+    .populate("sender")
+    .populate("receiver"),
+    query)
   const parcelData = queryBuilder
   .filter()
   .search(ParcelSearchableFields)
@@ -322,6 +346,7 @@ const blockParcel = async (
   try {
     const parcel = await Parcel.findOne({ trackingId }).session(session);
     const updatedBy = user.userId;
+    const receiverData = await User.findById(parcel?.receiver).select("name email");
 
     if (!parcel) {
       throw new AppError(httpStatus.NOT_FOUND, "Parcel not found");
@@ -356,7 +381,13 @@ const blockParcel = async (
 
     await session.commitTransaction();
     session.endSession();
-
+    // Send email to receiver/sender
+    await sendEmail({
+      to: receiverData?.email || "receiver@example.com",
+      subject: `Parcel Blocked: ${trackingId}`,
+      templateName: "parcelBlocked",
+      templateData: { trackingId, note: details.note, location: details.location },
+    });
     return parcel;
   } catch (error) {
     await session.abortTransaction();
@@ -365,6 +396,22 @@ const blockParcel = async (
   }
 };
 
+const unblockParcel = async (trackingId: string, user: Record<string, string>,  details: { location?: string; note?: string }) => {
+  const parcel = await Parcel.findOne({ trackingId });
+  if (!parcel) throw new AppError(httpStatus.NOT_FOUND, "Parcel not found");
+
+  parcel.isBlocked = false;
+  parcel.currentStatus = Status.APPROVED;
+  const updatedBy = user.userId;
+  parcel.statusLogs.push({
+    status: Status.APPROVED, 
+    updatedBy: new Types.ObjectId(updatedBy),
+    location: details.location,
+    note: details.note || "Parcel was unblocked",
+  });
+
+  return parcel.save();
+};
 
 export const ParcelServices={
     createParcel,
@@ -376,5 +423,6 @@ export const ParcelServices={
     getReceiverDeliveryHistory,
     getAllParcels,
     getSingleParcel,
-    blockParcel
+    blockParcel,
+    unblockParcel
 }

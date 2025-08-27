@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Parcel Blocked</title>
+  </head>
+  <body>
+    <h2>Parcel Blocked</h2>
+    <p>Your parcel with Tracking ID <strong><%= trackingId %></strong> has been blocked.</p>
+    <% if (note) { %>
+      <p><strong>Note:</strong> <%= note %></p>
+    <% } %>
+    <% if (location) { %>
+      <p><strong>Location:</strong> <%= location %></p>
+    <% } %>
+    <p>Please contact support if you have any questions.</p>
+  </body>
+</html>

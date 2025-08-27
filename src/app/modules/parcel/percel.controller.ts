@@ -4,10 +4,13 @@ import { catchAsync } from "../../utils/catchAsync"
 import { ParcelServices } from "./parcel.service"
 import { sendResponse } from "../../utils/sendResponse"
 import httpStatus from "http-status-codes"
+import AppError from "../../errorHelpers/AppError"
 
 
 export const createParcel = catchAsync(async (req:Request,res:Response,next:NextFunction)=>{
+
     const parcel = await ParcelServices.createParcel(req.body)
+   
     sendResponse(res,{
         success:true,
         statusCode: httpStatus.CREATED,
@@ -19,11 +22,13 @@ export const createParcel = catchAsync(async (req:Request,res:Response,next:Next
 export const updateParcelStatus = catchAsync(async(req:Request,res:Response,next:NextFunction)=>{
      const { trackingId } = req.params;
      const userId = req.user as Record<string, string>
-     const {status, updatedBy, location, note} = req.body
-
+     const {status, location, note} = req.body || {}
+       if (!status) {
+         throw new AppError(httpStatus.BAD_REQUEST, "Status is required");
+      }
+   
      const parcel = await ParcelServices.updateParcelStatus(trackingId,userId,{
         status,
-        updatedBy,
         location,
         note
      })
@@ -127,14 +132,37 @@ export const getSingleParcel = catchAsync(async(req:Request,res:Response,next:Ne
 export const blockParcel = catchAsync(async (req: Request, res: Response) => {
   const { trackingId } = req.params;
   const user = req.user as Record<string, string>;
-  const { note, location } = req.body;
+//   const { note, location } = req.body;
+  const details = {
+      note: req.body?.note || undefined,
+      location: req.body?.location || undefined,
+   };
 
-  const result = await ParcelServices.blockParcel(trackingId, user, { note, location });
+  const result = await ParcelServices.blockParcel(trackingId, user, details);
 
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
     message: "Parcel blocked successfully",
+    data: result,
+  });
+});
+
+export const unblockParcel = catchAsync(async (req: Request, res: Response) => {
+  const { trackingId } = req.params;
+  const user = req.user as Record<string, string>;
+//   const { note, location } = req.body;
+  const details = {
+      note: req.body?.note || undefined,
+      location: req.body?.location || undefined,
+   };
+
+  const result = await ParcelServices.unblockParcel(trackingId, user, details);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Parcel unblock successfully",
     data: result,
   });
 });
@@ -149,5 +177,6 @@ export const ParcelController={
     getReceiverDeliveryHistory,
     getAllParcels,
     getSingleParcel,
-    blockParcel
+    blockParcel,
+    unblockParcel
 }

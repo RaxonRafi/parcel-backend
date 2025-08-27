@@ -28,6 +28,16 @@ router.get(
     UserController.getAllUsers
 )
 router.get(
+    "/sender-list", 
+    checkAuth(...Object.values(Role)), 
+    UserController.senderList
+)
+router.get(
+    "/receiver-list", 
+    checkAuth(...Object.values(Role)), 
+    UserController.receiverList
+)
+router.get(
     "/:id", 
     checkAuth(Role.ADMIN), 
     UserController.getSingleUser
@@ -47,5 +57,6 @@ router.patch(
     checkAuth(Role.ADMIN), 
     UserController.unblockUser
 )
+
 
 export const UserRoutes = router

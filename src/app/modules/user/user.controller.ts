@@ -92,6 +92,24 @@ const unblockUser = catchAsync(async (req:Request,res:Response,next:NextFunction
         data: user,
     })
 })
+const senderList = catchAsync(async (req:Request,res:Response,next:NextFunction)=>{
+    const senders = await UserServices.senderList()
+    sendResponse(res,{
+        success:true,
+        statusCode: httpStatus.OK,
+        message: "senders retrived Successfully",
+        data: senders,
+    })
+})
+const receiverList = catchAsync(async (req:Request,res:Response,next:NextFunction)=>{
+    const receivers = await UserServices.receiverList()
+    sendResponse(res,{
+        success:true,
+        statusCode: httpStatus.OK,
+        message: "receivers retrived Successfully",
+        data: receivers,
+    })
+})
 
 export const UserController ={
     createUser,
@@ -101,5 +119,7 @@ export const UserController ={
     deleteUser,
     getMe,
     blockUser,
-    unblockUser
+    unblockUser,
+    senderList,
+    receiverList
 }

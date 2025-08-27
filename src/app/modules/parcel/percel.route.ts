@@ -13,12 +13,11 @@ router.post(
     ParcelController.createParcel
 )
 router.patch("/:trackingId/status",
-    validateRequest(updateStatusZodSchema),
+    // validateRequest(updateStatusZodSchema),
     checkAuth(Role.ADMIN),
     ParcelController.updateParcelStatus
 )
 router.patch("/:trackingId/cancel",
-    validateRequest(updateStatusZodSchema),
     checkAuth(Role.SENDER),
     ParcelController.cancelParcel
 )
@@ -49,6 +48,11 @@ router.patch(
     "/:trackingId/block",
     checkAuth(Role.ADMIN),
     ParcelController.blockParcel
+)
+router.patch(
+    "/:trackingId/unblock",
+    checkAuth(Role.ADMIN),
+    ParcelController.unblockParcel
 )
 
 export const ParcelRoutes = router
