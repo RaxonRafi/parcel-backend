@@ -10,12 +10,23 @@
     <p>Your parcel has been created with the following details:</p>
     <ul>
       <li><strong>Tracking ID:</strong> <%= trackingId %></li>
-      <li><strong>From:</strong> <%= fromAddress %></li>
-      <li><strong>To:</strong> <%= toAddress %></li>
-      <li><strong>Track your parcel here:</strong> 
-          <a href="<%= baseUrl %>/track-parcel?trackingId=<%= trackingId %>">
-            Track Parcel
-          </a>
+      <li>
+        <strong>From:</strong> 
+        <%= fromAddress.street %>, <%= fromAddress.city %>, 
+        <%= fromAddress.state %> - <%= fromAddress.zipCode %>, 
+        <%= fromAddress.country %>
+      </li>
+      <li>
+        <strong>To:</strong> 
+        <%= toAddress.street %>, <%= toAddress.city %>, 
+        <%= toAddress.state %> - <%= toAddress.zipCode %>, 
+        <%= toAddress.country %>
+      </li>
+      <li>
+        <strong>Track your parcel here:</strong> 
+        <a href="<%= baseUrl %>/track-parcel?trackingId=<%= trackingId %>">
+          Track Parcel
+        </a>
       </li>
     </ul>
     <p>Thank you for using our service!</p>

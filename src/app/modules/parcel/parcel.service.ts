@@ -43,7 +43,7 @@ export const createParcel = async (Payload: Partial<IParcel>) => {
 
     await session.commitTransaction();
     session.endSession();
-        // Send email to sender
+    // Send email to sender
     await sendEmail({
       to: SenderData?.email || "user@example.com",
       subject: `Parcel Created: ${trackingId}`,
