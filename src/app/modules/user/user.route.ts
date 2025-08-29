@@ -4,6 +4,8 @@ import { createUserZodSchema } from "./user.validation"
 import { validateRequest } from "../../middlewares/validateRequest"
 import { checkAuth } from "../../middlewares/checkAuth"
 import { Role } from "./user.interface"
+import { multerUpload } from "../../config/multer.config"
+
 
 const router = Router()
 
@@ -11,6 +13,17 @@ router.post(
     "/register",
     validateRequest(createUserZodSchema),
     UserController.createUser
+)
+router.patch(
+    "/submit-nid",
+    checkAuth(...Object.values(Role)),
+    multerUpload.array("files"),
+    UserController.submitNid
+)
+router.patch(
+    "/approve-delivery-personnel/:id",
+    checkAuth(Role.ADMIN),
+    UserController.approveDeliveryPersonnels
 )
 router.patch(
     "/update-profile", 
@@ -36,6 +49,11 @@ router.get(
     "/receiver-list", 
     checkAuth(...Object.values(Role)), 
     UserController.receiverList
+)
+router.get(
+    "/delivery-personnels", 
+    checkAuth(Role.ADMIN), 
+    UserController.getAllDeliveryPersonnels
 )
 router.get(
     "/:id", 

@@ -414,6 +414,41 @@ const unblockParcel = async (trackingId: string, user: Record<string, string>,  
   return parcel.save();
 };
 
+const assignDeliveryPersonnel = async(trackingId:string,deliveryPersonnel:string)=>{
+  const session = await mongoose.startSession()
+  session.startTransaction()
+
+  try {
+    const parcel = await Parcel.findOne({trackingId}).session(session);
+        if (!parcel) {
+      throw new AppError(httpStatus.NOT_FOUND, "Parcel not found");
+    }
+
+    const user = await User.findById(deliveryPersonnel).session(session);
+    if (!user) {
+      throw new AppError(httpStatus.NOT_FOUND, "Delivery personnel not found");
+    }
+
+    if (user.role !== Role.DELIVERY_PERSONNEL) {
+      throw new AppError(
+        httpStatus.BAD_REQUEST,
+        "User is not a delivery personnel"
+      );
+    }
+    parcel.deliveryPersonnel = user._id
+    await parcel.save({session})
+    session.endSession()
+    return parcel;
+
+
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw error;
+  }
+
+}
+
 export const ParcelServices={
     createParcel,
     updateParcelStatus,
@@ -425,5 +460,6 @@ export const ParcelServices={
     getAllParcels,
     getSingleParcel,
     blockParcel,
-    unblockParcel
+    unblockParcel,
+    assignDeliveryPersonnel
 }

@@ -4,6 +4,8 @@ export enum Role {
   ADMIN = "ADMIN",
   SENDER = "SENDER",
   RECEIVER = "RECEIVER",
+  DELIVERY_PERSONNEL="DELIVERY_PERSONNEL",
+  PENDING_DELIVERY="PENDING_DELIVERY"
 }
 
 export interface IAuthProvider {
@@ -31,4 +33,7 @@ export interface IUser {
   role: Role;
   auths: IAuthProvider[];
   parcel?: Types.ObjectId[];
+  nidNumber?: string,
+  nidImage?: string[],
+  deleteImages?: string[]
 }

@@ -30,6 +30,8 @@ const userSchema = new Schema<IUser>({
     },
     isVerified: {type: Boolean, default: false},
     auths: [authProviderSchema],
+    nidNumber: {type: String, unique:true},
+    nidImage: {type: [String], default:[]}
 },{
     timestamps: true,
     versionKey: false,

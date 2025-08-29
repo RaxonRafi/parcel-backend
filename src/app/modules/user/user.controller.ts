@@ -5,16 +5,17 @@ import { UserServices } from "./user.service";
 import { sendResponse } from "../../utils/sendResponse";
 import httpStatus from "http-status-codes"
 import { JwtPayload } from "jsonwebtoken";
-import { IUser } from "./user.interface";
+import { IUser, Role } from "./user.interface";
 
 const createUser = catchAsync(async (req:Request,res:Response,next:NextFunction)=>{
     const accessToken = req.cookies.accessToken as string || undefined;
     const user = await UserServices.createUser(req.body, accessToken);
-
+    const pending_delivery = req.body.role === Role.PENDING_DELIVERY
     sendResponse(res,{
         success:true,
         statusCode: httpStatus.CREATED,
-        message: "User Created Successfully",
+        message: pending_delivery ? "Registered as pending delivery personnel, waiting for admin approval" 
+                : "User Created Successfully",
         data: user,
     })
 })
@@ -110,6 +111,44 @@ const receiverList = catchAsync(async (req:Request,res:Response,next:NextFunctio
         data: receivers,
     })
 })
+const submitNid = catchAsync(async (req:Request,res:Response,next:NextFunction)=>{
+     const payload: IUser = {
+        ...JSON.parse(req.body.data),
+        nidImage: (req.files as Express.Multer.File[]).map(file=> file.path)
+    } 
+
+    const decodedToken = req.user as JwtPayload
+    const nidDetails =await UserServices.submitNid(payload,decodedToken.userId)
+    sendResponse(res,{
+        success:true,
+        statusCode: httpStatus.OK,
+        message: "NID submitted, waiting for admin review",
+        data: nidDetails,
+    })
+})
+const approveDeliveryPersonnels = catchAsync(async (req:Request,res:Response,next:NextFunction)=>{
+
+    const userId = req.params.id
+    const result = await UserServices.approveDeliveryPersonnels(userId)
+
+    sendResponse(res,{
+        success:true,
+        statusCode: httpStatus.OK,
+        message: "Delivery Personnel Approved successfully!",
+        data: result,
+    })
+})
+export const getAllDeliveryPersonnels = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const result = await UserServices.getAllDeliveryPersonnels();
+    sendResponse(res, {
+      success: true,
+      statusCode: 200,
+      message: "Delivery personnels fetched successfully",
+      data: result,
+    });
+  }
+);
 
 export const UserController ={
     createUser,
@@ -121,5 +160,8 @@ export const UserController ={
     blockUser,
     unblockUser,
     senderList,
-    receiverList
+    receiverList,
+    submitNid,
+    approveDeliveryPersonnels,
+    getAllDeliveryPersonnels
 }

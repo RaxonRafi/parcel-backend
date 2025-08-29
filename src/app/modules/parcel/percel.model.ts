@@ -25,7 +25,7 @@ const StatuslogSchema = new Schema<IStatuslog>({
     type: Date,
     default: Date.now
   }
-}, { _id: false }); // Avoid generating a separate _id for each status log
+}, { _id: false }); 
 
 // Address schema
 const AddressSchema = new Schema<IAddress>({
@@ -53,7 +53,7 @@ const ParcelSchema = new Schema<IParcel>({
   estimatedDelivery: { type: Date },
   actualDelivery: { type: Date },
   priority: { type: String, enum: Object.values(Priority), default: Priority.NORMAL },
-
+  deliveryPersonnel:{type: Schema.Types.ObjectId, ref:"User"},
   statusLogs: { type: [StatuslogSchema], default: [] }
 
 }, {

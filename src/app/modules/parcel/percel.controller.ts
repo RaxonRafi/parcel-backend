@@ -167,6 +167,23 @@ export const unblockParcel = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+export const assignDeliveryPersonnel = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { trackingId, deliveryPersonnel } = req.body;
+
+    const result = await ParcelServices.assignDeliveryPersonnel(
+      trackingId,
+      deliveryPersonnel
+    );
+
+    sendResponse(res, {
+      success: true,
+      statusCode: 200,
+      message: "Delivery personnel assigned successfully",
+      data: result,
+    });
+  }
+);
 export const ParcelController={
     createParcel,
     updateParcelStatus,
@@ -178,5 +195,6 @@ export const ParcelController={
     getAllParcels,
     getSingleParcel,
     blockParcel,
-    unblockParcel
+    unblockParcel,
+    assignDeliveryPersonnel
 }

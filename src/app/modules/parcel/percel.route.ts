@@ -13,7 +13,7 @@ router.post(
     ParcelController.createParcel
 )
 router.patch("/:trackingId/status",
-    // validateRequest(updateStatusZodSchema),
+    validateRequest(updateStatusZodSchema),
     checkAuth(Role.ADMIN),
     ParcelController.updateParcelStatus
 )
@@ -53,6 +53,11 @@ router.patch(
     "/:trackingId/unblock",
     checkAuth(Role.ADMIN),
     ParcelController.unblockParcel
+)
+router.patch(
+    "/assign-delivery-personnel",
+    checkAuth(Role.ADMIN),
+    ParcelController.assignDeliveryPersonnel
 )
 
 export const ParcelRoutes = router

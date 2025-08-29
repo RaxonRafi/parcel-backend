@@ -8,6 +8,7 @@ import { userSearchableFields } from "./user.constants";
 import { QueryBuilder } from "../../utils/QueryBuilder";
 import { JwtPayload } from "jsonwebtoken";
 import { verifyToken } from "../../utils/jwt";
+
 // import { deleteImageFromCloudinary } from "../../config/cloudinary.config";
 
 
@@ -40,7 +41,11 @@ const createUser = async (payload: Partial<IUser>, token?: string) => {
     userRole = Role.ADMIN;
   } else if (role === Role.SENDER || role === Role.RECEIVER) {
     userRole = role;
-  } else {
+  } else if(role === Role.DELIVERY_PERSONNEL){
+    userRole = Role.PENDING_DELIVERY
+  } 
+  
+  else {
     userRole = Role.SENDER; 
   }
 
@@ -184,7 +189,7 @@ const unblockUser = async (userId: string) => {
 };
 
 const senderList = async () => {
-    const senders = await User.find({ role: "SENDER" }).select("name email _id"); // optional debug log
+    const senders = await User.find({ role: "SENDER" }).select("name email _id");
     return senders;
 };
 
@@ -193,8 +198,30 @@ const receiverList = async () => {
     return receivers;
 };
 
+const submitNid = async (Payload:Partial<IUser>, userId: string) => {
+    const {nidNumber, nidImage } = Payload
+    const user = await User.findByIdAndUpdate(userId,{nidNumber,nidImage},{new:true})
+    return user;
+    
+}
+const approveDeliveryPersonnels = async (userId:string) => {
+    const user = await User.findById(userId);
 
+    if(!user){
+        return new AppError(httpStatus.BAD_REQUEST, "User not Exists!")
+    }
+    if(!user.nidImage){
+        return new AppError(httpStatus.NOT_FOUND,"Nid not Submitted yet!")
+    }
 
+    const approvedUser = await User.findByIdAndUpdate(userId,{role: Role.DELIVERY_PERSONNEL},{new:true, runValidators: true})
+
+    return approvedUser;
+}
+export const getAllDeliveryPersonnels = async () => {
+  const deliveryPersons = await User.find({ role: Role.DELIVERY_PERSONNEL }).select("-password");
+  return deliveryPersons;
+};
 
 export const UserServices = {
     createUser,
@@ -206,5 +233,8 @@ export const UserServices = {
     blockUser,
     unblockUser,
     senderList,
-    receiverList
+    receiverList,
+    submitNid,
+    approveDeliveryPersonnels,
+    getAllDeliveryPersonnels
 }

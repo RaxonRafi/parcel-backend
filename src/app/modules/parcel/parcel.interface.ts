@@ -57,5 +57,6 @@ export interface IParcel{
     estimatedDelivery?: Date,
     actualDelivery?: Date,
     priority?: Priority,
+    deliveryPersonnel?: Types.ObjectId
     statusLogs:IStatuslog[]
 }

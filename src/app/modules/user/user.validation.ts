@@ -30,8 +30,13 @@ export const createUserZodSchema = z.object({
     address: z
         .string({ message: "Address must be string" })
         .max(200, { message: "Address cannot exceed 200 characters." })
-        .optional()
-    })
+        .optional(),
+    nidNumber: z
+        .string()
+        .regex(/^\d{10}$/, {
+            message: "Must be 10 digits."
+        }),
+})
 
 export const updateUserZodSchema = z.object({
     name: z
