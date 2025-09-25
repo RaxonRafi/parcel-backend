@@ -35,7 +35,7 @@ export const createUserZodSchema = z.object({
         .string()
         .regex(/^\d{10}$/, {
             message: "Must be 10 digits."
-        }),
+        }).optional(),
 })
 
 export const updateUserZodSchema = z.object({

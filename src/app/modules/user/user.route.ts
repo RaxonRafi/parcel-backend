@@ -56,6 +56,11 @@ router.get(
     UserController.getAllDeliveryPersonnels
 )
 router.get(
+    "/pending-delivery-personnels", 
+    checkAuth(Role.ADMIN), 
+    UserController.getAllPendingDeliveryPersonnels
+)
+router.get(
     "/:id", 
     checkAuth(Role.ADMIN), 
     UserController.getSingleUser
